@@ -9,7 +9,6 @@ class KafkaToMongo:
     def __init__(self,topic,collection_name):
         self.config_instance = config.get("avroschema")
         data = self.read_data_from_kafka(topic)
-        print(data)
         self.send_to_mongo(data,collection_name)
 
     def read_data_from_kafka(self,topic):
