@@ -1,4 +1,6 @@
-config={}
+import os
+
+config = {}
 
 config["avroschema"] = {
     "type": "record",
@@ -22,4 +24,10 @@ config["avroschema"] = {
     ]
 }
 
+config["producer_config"] = {'bootstrap.servers': os.environ['BOOTSTRAP_SERVER']}
 
+config["consumer_config"] = {
+            'bootstrap.servers': os.environ['BOOTSTRAP_SERVER'],
+            'group.id': 'my_consumer_group',
+            'auto.offset.reset': 'earliest'  # Start reading from the beginning of the topic
+        }

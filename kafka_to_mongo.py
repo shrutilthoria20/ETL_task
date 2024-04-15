@@ -6,11 +6,11 @@ import os
 from utils.kafkautils import KafkaUtils
 from utils.mongoutils import MongoUtils
 class Etl_second:
-    def __init__(self,topic):
+    def __init__(self,topic,collection_name):
         self.config_instance = config.get("avroschema")
         data = self.read_data_from_kafka(topic)
         print(data)
-        self.send_to_mongo(data)
+        self.send_to_mongo(data,collection_name)
 
     def read_data_from_kafka(self,topic):
         data_list = []
@@ -52,9 +52,9 @@ class Etl_second:
             return data_list
 
 
-    def send_to_mongo(self,data):
+    def send_to_mongo(self,data,collection_name):
         mongo_utils = MongoUtils()
-        collection = mongo_utils.create_connection(os.environ['DB_NAME'], os.environ['COLLECTION_NAME'])
+        collection = mongo_utils.create_connection(os.environ['DB_NAME'], collection_name)
         mongo_utils.insert_data(collection,data)
 
 if __name__ == '__main__':
