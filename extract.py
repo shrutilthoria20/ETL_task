@@ -198,7 +198,7 @@ class Extract:
             return data_list
 
     def send_to_mongo(self,list_of_json):
-        mongo_uri = "mongodb+srv://shrutilthoria50:iQh9DkjSCq7FTRZX@cluster0.uvn3bbk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+        
         client = pymongo.MongoClient(mongo_uri)
 
         db = client["IBM_Project"]
