@@ -1,0 +1,55 @@
+import fastavro
+from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
+import io
+from config.config import config
+import os
+from utils.kafkautils import KafkaUtils
+from utils.mongoutils import MongoUtils
+class Etl_second:
+    def __init__(self):
+        self.config_instance = config.get("avroschema")
+
+    def read_data_from_kafka(self,topic):
+        data_list = []
+        consumer = KafkaUtils.data_consumer()
+
+        # Subscribe to the Kafka topic
+        consumer.subscribe([topic])
+
+        avro_schema = self.config_instance
+
+        # Start consuming messages
+        try:
+            while True:
+                msg = consumer.poll(timeout=1.0)  # Poll for new messages
+                if msg is None:
+                    break
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        # End of partition, commit offsets
+                        print('%% %s [%d] reached end at offset %d\n' %
+                              (msg.topic(), msg.partition(), msg.offset()))
+                    elif msg.error():
+                        raise KafkaException(msg.error())
+                else:
+
+                    avro_bytes = msg.value()  # Avro data in bytes
+                    avro_file = io.BytesIO(avro_bytes)  # Wrap bytes in a file-like object
+                    # Deserialize Avro data
+                    avro_record = fastavro.schemaless_reader(avro_file, avro_schema)
+                    data_list.append(avro_record)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            # Close the Kafka consumer
+            consumer.close()
+            return data_list
+
+    def send_to_mongo(self,data):
+        collection = MongoUtils.create_connection(os.environ['DB_NAME'], os.environ['COLLECTION_NAME'])
+        MongoUtils.insert_data(collection,data)
+
+if __name__ == '__main__':
+    obj = Etl_second()
+    data = obj.read_data_from_kafka('my-topic')
+    obj.send_to_mongo(data)

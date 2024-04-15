@@ -1,11 +1,10 @@
 import pandas as pd
 from fastavro import writer, parse_schema, reader
 import io
-from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
-import fastavro
 from urllib.parse import urlparse
-import pymongo
 from config.config import config
+import fastavro
+from utils.kafkautils import KafkaUtils
 
 
 class Etl_first:
@@ -65,8 +64,6 @@ class Etl_first:
             # Get the Avro bytes
             avro_bytes = avro_file.read()
 
-        # Now, you can save the avro_bytes to a file or use it as needed
-        # For example, you can write it to a file like this:
         with open("data.avro", "wb") as f:
             f.write(avro_bytes)
     def read_avro_file(self):
@@ -77,6 +74,19 @@ class Etl_first:
             for record in avro_reader:
                 print(record)
 
+    def send_to_kafka(self,topic,avro_file):
+        # Read Avro file and produce data to Kafka
+        with open(avro_file, 'rb') as avro_file:
+            avro_reader = fastavro.reader(avro_file)
+            schema = avro_reader.writer_schema
+
+            for record in avro_reader:
+                # Serialize Avro record to bytes
+                avro_bytes_io = io.BytesIO()
+                fastavro.schemaless_writer(avro_bytes_io, schema, record)
+
+                # Produce serialized data to Kafka
+                KafkaUtils.produce_data(topic, avro_bytes_io.getvalue())
 
 
 if __name__ == '__main__':
@@ -84,4 +94,5 @@ if __name__ == '__main__':
     df = obj.read_csv_file(r"E:\archive\weblog.csv")
     df = obj.parse_data(df)
     obj.create_avro_file(df)
-    obj.read_avro_file()
+    # obj.read_avro_file()
+    obj.send_to_kafka('my-topic','data.avro')

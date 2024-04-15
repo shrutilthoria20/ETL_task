@@ -24,3 +24,4 @@ class KafkaUtils:
         # Create Kafka consumer
         consumer = Consumer(consumer_config)
         return consumer
+
