@@ -5,12 +5,12 @@ from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
 import fastavro
 from urllib.parse import urlparse
 import pymongo
-from config.config import Config
+from config.config import config
 
 
 class Etl:
     def __init__(self):
-        self.config_instance = Config()
+        self.config_instance = config.get("avroschema")
     def parse_url(self,url):
         parsed_url = urlparse(url)
         url_components = {
@@ -69,9 +69,17 @@ class Etl:
         # For example, you can write it to a file like this:
         with open("data.avro", "wb") as f:
             f.write(avro_bytes)
+    def read_avro_file(self):
+        with open("data.avro", "rb") as f:
+            avro_reader = reader(f)
+
+            # Print each record in the Avro file
+            for record in avro_reader:
+                print(record)
 
 if __name__ == '__main__':
     obj = Etl()
-    df = obj.read_csv_file(r"E:\archive\weblog.csv")
-    df = obj.parse_data(df)
-    obj.create_avro_file(df)
+    # df = obj.read_csv_file(r"E:\archive\weblog.csv")
+    # df = obj.parse_data(df)
+    # obj.create_avro_file(df)
+    obj.read_avro_file()

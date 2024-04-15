@@ -4,7 +4,6 @@ from confluent_kafka import Producer, Consumer
 class KafkaUtils:
     def __init__(self):
         self.bootstrap_servers = os.environ['BOOTSTRAP_SERVER']
-
     def produce_data(self,topic,value):
         # Kafka producer configuration
         producer_config = {
