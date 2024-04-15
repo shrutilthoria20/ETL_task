@@ -5,7 +5,7 @@ from config.config import config
 import os
 from utils.kafkautils import KafkaUtils
 from utils.mongoutils import MongoUtils
-class Etl_second:
+class KafkaToMongo:
     def __init__(self,topic,collection_name):
         self.config_instance = config.get("avroschema")
         data = self.read_data_from_kafka(topic)
@@ -13,6 +13,7 @@ class Etl_second:
         self.send_to_mongo(data,collection_name)
 
     def read_data_from_kafka(self,topic):
+        print("Reading from kafka")
         data_list = []
         kafka_utils = KafkaUtils()
         consumer = kafka_utils.data_consumer()
@@ -42,17 +43,16 @@ class Etl_second:
                     # Deserialize Avro data
                     avro_record = fastavro.schemaless_reader(avro_file, avro_schema)
                     data_list.append(avro_record)
-                    # print(data_list)
         except KeyboardInterrupt:
             pass
         finally:
             # Close the Kafka consumer
             consumer.close()
-            print(data_list)
             return data_list
 
 
     def send_to_mongo(self,data,collection_name):
+        print("Sending to Mongo")
         mongo_utils = MongoUtils()
         collection = mongo_utils.create_connection(os.environ['DB_NAME'], collection_name)
         mongo_utils.insert_data(collection,data)

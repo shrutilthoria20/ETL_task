@@ -1,5 +1,5 @@
-from csv_to_kafka import Etl_first
-from kafka_to_mongo import Etl_second
+from csv_to_kafka import CsvToKafka
+from kafka_to_mongo import KafkaToMongo
 
-Etl_first(r'E:\archive\weblog.csv', 'my-topic')
-Etl_second('my-topic', 'etl_task')
+CsvToKafka(r'E:\archive\weblog.csv', 'my-topic')
+KafkaToMongo('my-topic', 'etl_task')

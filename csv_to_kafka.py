@@ -8,7 +8,7 @@ from utils.kafkautils import KafkaUtils
 import os
 
 
-class Etl_first:
+class CsvToKafka:
     def __init__(self,csv_path,topic_name):
         self.config_instance = config.get("avroschema")
         self.avro_file = "data.avro"
