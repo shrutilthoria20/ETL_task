@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import pymongo
 
 
-class Extract:
+class Etl_Task:
     def __init__(self):
         pass
 
@@ -69,13 +69,13 @@ class Extract:
         df['Time'] = pd.to_datetime(df['Time'], format='%d/%b/%Y:%H:%M:%S', errors='coerce')
         return df
 
-    def convert_to_avro(self,df):
+    def create_avro_file(self,df):
+        print("Creating Avro formate file")
         df['IP'] = df['IP'].astype(str)
         df['Time'] = df['Time'].astype(str)
         # df['URL'] = df['URL'].astype(dict)
         df['Status'] = df['Status'].astype(str)
         # df['URL'] = df['URL'].apply(self.parse_url)
-
 
         avro_schema = self.set_avro_schema()
 
@@ -195,26 +195,27 @@ class Extract:
         finally:
             # Close the Kafka consumer
             consumer.close()
+            print(data_list)
             return data_list
 
-    def send_to_mongo(self,list_of_json):
-        
-        client = pymongo.MongoClient(mongo_uri)
+    # def send_to_mongo(self,list_of_json):
+    #
+    #     client = pymongo.MongoClient(mongo_uri)
+    #
+    #     db = client["IBM_Project"]
+    #
+    #     etl_task = db["etl_task"]
+    #
+    #     etl_task.insert_many(list_of_json)
+    #
+    #     print("Data Sent")
 
-        db = client["IBM_Project"]
 
-        etl_task = db["etl_task"]
-
-        etl_task.insert_many(list_of_json)
-
-        print("Data Sent")
-
-
-obj = Extract()
+obj = Etl_Task()
 df = obj.read_csv_file(r"E:\archive\weblog.csv")
 df = obj.parse_data(df)
-obj.convert_to_avro(df)
-obj.read_avro_file()
+obj.create_avro_file(df)
+# obj.read_avro_file()
 obj.send_to_kafka()
 read_data = obj.read_data_from_kafka()
-obj.send_to_mongo(read_data)
+# obj.send_to_mongo(read_data)

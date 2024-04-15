@@ -3,16 +3,16 @@ from confluent_kafka import Producer, Consumer
 
 class KafkaUtils:
     def __init__(self):
-        self.bootstrap_servers = os.environ['BOOTSTRAP_SERVER']
-    def produce_data(self,topic,value):
+        # self.bootstrap_servers = "os.environ['BOOTSTRAP_SERVER']"
+        self.bootstrap_servers = "localhost:9092"
+    def produce_data(self):
         # Kafka producer configuration
         producer_config = {
             'bootstrap.servers': self.bootstrap_servers
         }
         # Create Kafka producer
         producer = Producer(producer_config)
-        producer.produce(topic, value=value)
-        producer.flush()
+        return producer
 
     def data_consumer(self):
         # Kafka consumer configuration

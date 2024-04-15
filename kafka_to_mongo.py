@@ -6,12 +6,16 @@ import os
 from utils.kafkautils import KafkaUtils
 from utils.mongoutils import MongoUtils
 class Etl_second:
-    def __init__(self):
+    def __init__(self,topic):
         self.config_instance = config.get("avroschema")
+        data = self.read_data_from_kafka(topic)
+        print(data)
+        self.send_to_mongo(data)
 
     def read_data_from_kafka(self,topic):
         data_list = []
-        consumer = KafkaUtils.data_consumer()
+        kafka_utils = KafkaUtils()
+        consumer = kafka_utils.data_consumer()
 
         # Subscribe to the Kafka topic
         consumer.subscribe([topic])
@@ -38,18 +42,20 @@ class Etl_second:
                     # Deserialize Avro data
                     avro_record = fastavro.schemaless_reader(avro_file, avro_schema)
                     data_list.append(avro_record)
+                    # print(data_list)
         except KeyboardInterrupt:
             pass
         finally:
             # Close the Kafka consumer
             consumer.close()
+            print(data_list)
             return data_list
 
+
     def send_to_mongo(self,data):
-        collection = MongoUtils.create_connection(os.environ['DB_NAME'], os.environ['COLLECTION_NAME'])
-        MongoUtils.insert_data(collection,data)
+        mongo_utils = MongoUtils()
+        collection = mongo_utils.create_connection(os.environ['DB_NAME'], os.environ['COLLECTION_NAME'])
+        mongo_utils.insert_data(collection,data)
 
 if __name__ == '__main__':
-    obj = Etl_second()
-    data = obj.read_data_from_kafka('my-topic')
-    obj.send_to_mongo(data)
+    pass

@@ -5,11 +5,18 @@ from urllib.parse import urlparse
 from config.config import config
 import fastavro
 from utils.kafkautils import KafkaUtils
+import os
 
 
 class Etl_first:
-    def __init__(self):
+    def __init__(self,csv_path,topic_name):
         self.config_instance = config.get("avroschema")
+        self.avro_file = "data.avro"
+        df = self.read_csv_file(csv_path)
+        df = self.parse_data(df)
+        self.create_avro_file(df)
+        self.send_to_kafka(topic_name)
+        self.delete_avro_file()
     def parse_url(self,url):
         parsed_url = urlparse(url)
         url_components = {
@@ -22,12 +29,14 @@ class Etl_first:
         }
         return [url_components]
     def read_csv_file(self, csv_file_path):
+        print("Reading CSV file")
         # Open the CSV file
         df = pd.read_csv(csv_file_path)
 
         # Print the DataFrame to see its contents
         return df
     def parse_data(self,df):
+        print("Parsing Data")
         df['URL'] = df['URL'].apply(self.parse_url)
 
         ip_pattern = r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
@@ -74,9 +83,12 @@ class Etl_first:
             for record in avro_reader:
                 print(record)
 
-    def send_to_kafka(self,topic,avro_file):
+    def send_to_kafka(self,topic):
+        print("Sending to Kafka")
+        kafka_utils = KafkaUtils()
+        producer = kafka_utils.produce_data()
         # Read Avro file and produce data to Kafka
-        with open(avro_file, 'rb') as avro_file:
+        with open(self.avro_file, 'rb') as avro_file:
             avro_reader = fastavro.reader(avro_file)
             schema = avro_reader.writer_schema
 
@@ -86,13 +98,17 @@ class Etl_first:
                 fastavro.schemaless_writer(avro_bytes_io, schema, record)
 
                 # Produce serialized data to Kafka
-                KafkaUtils.produce_data(topic, avro_bytes_io.getvalue())
+                producer.produce(topic=topic, value=avro_bytes_io.getvalue())
 
+        # Flush Kafka producer to ensure all messages are sent
+        producer.flush()
+    def delete_avro_file(self):
+        if os.path.exists(self.avro_file):
+            # Delete the file
+            os.remove(self.avro_file)
+            print(f"File '{self.avro_file}' deleted successfully.")
+        else:
+            print(f"File '{self.avro_file}' does not exist.")
 
 if __name__ == '__main__':
-    obj = Etl_first()
-    df = obj.read_csv_file(r"E:\archive\weblog.csv")
-    df = obj.parse_data(df)
-    obj.create_avro_file(df)
-    # obj.read_avro_file()
-    obj.send_to_kafka('my-topic','data.avro')
+    pass
