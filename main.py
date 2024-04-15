@@ -48,7 +48,7 @@ class Etl:
     def create_avro_file(self,df):
         print("Creating Avro formate file")
 
-        avro_schema = self.config_instance.all_schema()
+        avro_schema = self.config_instance
 
         # Convert DataFrame to list of dictionaries
         records = df.to_dict(orient='records')
@@ -77,9 +77,11 @@ class Etl:
             for record in avro_reader:
                 print(record)
 
+
+
 if __name__ == '__main__':
     obj = Etl()
-    # df = obj.read_csv_file(r"E:\archive\weblog.csv")
-    # df = obj.parse_data(df)
-    # obj.create_avro_file(df)
+    df = obj.read_csv_file(r"E:\archive\weblog.csv")
+    df = obj.parse_data(df)
+    obj.create_avro_file(df)
     obj.read_avro_file()
