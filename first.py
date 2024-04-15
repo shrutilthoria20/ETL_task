@@ -8,7 +8,7 @@ import pymongo
 from config.config import config
 
 
-class Etl:
+class Etl_first:
     def __init__(self):
         self.config_instance = config.get("avroschema")
     def parse_url(self,url):
@@ -80,7 +80,7 @@ class Etl:
 
 
 if __name__ == '__main__':
-    obj = Etl()
+    obj = Etl_first()
     df = obj.read_csv_file(r"E:\archive\weblog.csv")
     df = obj.parse_data(df)
     obj.create_avro_file(df)
