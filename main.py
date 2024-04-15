@@ -9,7 +9,6 @@ from config.config import Config
 
 
 class Etl:
-
     def __init__(self):
         self.config_instance = Config()
     def parse_url(self,url):
@@ -29,7 +28,6 @@ class Etl:
 
         # Print the DataFrame to see its contents
         return df
-
     def parse_data(self,df):
         df['URL'] = df['URL'].apply(self.parse_url)
 
@@ -40,44 +38,40 @@ class Etl:
         df = df[['IP', 'Time', 'URL', 'Status']]
         df['Time'] = df['Time'].str.replace('[', '').str.strip()
         df['Time'] = pd.to_datetime(df['Time'], format='%d/%b/%Y:%H:%M:%S', errors='coerce')
-        # print(df['IP'],df['Time'],df['URL'],df['Status'])
+
+        df['IP'] = df['IP'].astype(str)
+        df['Time'] = df['Time'].astype(str)
+        df['Status'] = df['Status'].astype(str)
+
         return df
 
-    def create_avro_file(self):
-        # print("Creating Avro formate file")
-        # df['IP'] = df['IP'].astype(str)
-        # df['Time'] = df['Time'].astype(str)
-        # df['URL'] = df['URL'].astype(dict)
-        # df['Status'] = df['Status'].astype(str)
-        # df['URL'] = df['URL'].apply(self.parse_url)
-
+    def create_avro_file(self,df):
+        print("Creating Avro formate file")
 
         avro_schema = self.config_instance.all_schema()
 
-
         # Convert DataFrame to list of dictionaries
-        # records = df.to_dict(orient='records')
-        # for i in records:
-        #     print(i['URL'])
-        # Convert schema to parsed schema
-        # parsed_schema = parse_schema(avro_schema)
+        records = df.to_dict(orient='records')
 
-        # with io.BytesIO() as avro_file:
-        #     writer(avro_file, parsed_schema, records)
+        # Convert schema to parsed schema
+        parsed_schema = parse_schema(avro_schema)
+
+        with io.BytesIO() as avro_file:
+            writer(avro_file, parsed_schema, records)
 
             # Reset file pointer
-            # avro_file.seek(0)
+            avro_file.seek(0)
 
             # Get the Avro bytes
-            # avro_bytes = avro_file.read()
+            avro_bytes = avro_file.read()
 
         # Now, you can save the avro_bytes to a file or use it as needed
         # For example, you can write it to a file like this:
-        # with open("data.avro", "wb") as f:
-        #     f.write(avro_bytes)
+        with open("data.avro", "wb") as f:
+            f.write(avro_bytes)
 
 if __name__ == '__main__':
     obj = Etl()
-    # df = obj.read_csv_file(r"E:\archive\weblog.csv")
-    # obj.parse_data(df)
-    obj.create_avro_file()
+    df = obj.read_csv_file(r"E:\archive\weblog.csv")
+    df = obj.parse_data(df)
+    obj.create_avro_file(df)
