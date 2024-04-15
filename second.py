@@ -1,5 +1,5 @@
 import fastavro
-from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
+from confluent_kafka import KafkaError, KafkaException
 import io
 from config.config import config
 import os
