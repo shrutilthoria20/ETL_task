@@ -1,4 +1,5 @@
 import pandas as pd
+from confluent_kafka import KafkaException
 from fastavro import writer, parse_schema, reader
 import io
 from urllib.parse import urlparse
@@ -83,10 +84,15 @@ class CsvToKafka:
             for record in avro_reader:
                 print(record)
 
-    def send_to_kafka(self,topic):
+    def send_to_kafka(self, topic):
         print("Sending to Kafka")
         kafka_utils = KafkaUtils()
-        producer = kafka_utils.produce_data()
+        try:
+            producer = kafka_utils.produce_data()
+        except KafkaException as e:
+            print(f"Error: Kafka producer is down - {e}")
+            return
+
         # Read Avro file and produce data to Kafka
         with open(self.avro_file, 'rb') as avro_file:
             avro_reader = fastavro.reader(avro_file)
@@ -98,10 +104,14 @@ class CsvToKafka:
                 fastavro.schemaless_writer(avro_bytes_io, schema, record)
 
                 # Produce serialized data to Kafka
-                producer.produce(topic=topic, value=avro_bytes_io.getvalue())
+                try:
+                    producer.produce(topic=topic, value=avro_bytes_io.getvalue())
+                except KafkaException as e:
+                    print(f"Error sending message to Kafka - {e}")
 
         # Flush Kafka producer to ensure all messages are sent
         producer.flush()
+
     def delete_avro_file(self):
         if os.path.exists(self.avro_file):
             # Delete the file
